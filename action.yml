@@ -1,0 +1,22 @@
+name: 'docker-over-ssh-action'
+description: 'Control docker over ssh, from your github pipeline'
+inputs:
+  host:
+    description: 'SSH host to connect to'
+    required: true
+  user:
+    description: 'SSH user to connect as'
+    required: true
+  key:
+    description: 'SSH key to use'
+    required: true
+  port:
+    description: 'SSH port'
+    required: true
+    default: 22
+  script:
+    description: 'Commands to run'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
