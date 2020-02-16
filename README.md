@@ -32,3 +32,8 @@ jobs:
     user: ${SSH_USER}
   ```
 - Keep in mind that the `script` commands are being executed locally, inside the container - not on the remote host. Only the docker API calls are being forwarded to the remote host.
+- There's a wait-for-stack script ([source](https://github.com/sudo-bmitch/docker-stack-wait)) for convenience
+
+## Acknowledgements
+- [appleboy's](https://github.com/appleboy) [ssh-action](https://github.com/appleboy/ssh-action) for the overall github action pattern
+- [Brandon Mitchell's](https://github.com/sudo-bmitch) awesome [docker-stack-wait](https://github.com/sudo-bmitch/docker-stack-wait) script
