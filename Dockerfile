@@ -17,6 +17,8 @@ RUN apk add --no-cache \
 
 COPY ssh-config /root/.ssh/config
 
+RUN chmod 600 /root/.ssh/config
+
 COPY entrypoint.sh wait-for-stack /usr/local/bin/
 
 ENTRYPOINT ["entrypoint.sh"]
