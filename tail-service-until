@@ -1,0 +1,69 @@
+#!/bin/bash -e
+
+while [[ $# -gt 0 ]]; do
+  key="$1"
+
+  case $key in
+      -s|--service)
+      SERVICE="$2"
+      shift
+      shift
+      ;;
+      --string)
+      STRING="$2"
+      shift
+      shift
+      ;;
+      -t|--timeout)
+      TIMEOUT="$2"
+      shift
+      shift
+      ;;
+      -c|--commit)
+      COMMIT="$2"
+      shift
+      shift
+      ;;
+      *)
+      shift
+      ;;
+  esac
+done
+
+if [ -z ${TIMEOUT} ]; then
+  TIMEOUT=60
+fi
+
+if [ -z ${SERVICE} ]; then
+  echo "Missing argument: --service"
+  exit 1
+elif [ -z ${STRING} ]; then
+  echo "Missing argument: --string"
+  exit 1
+fi
+
+if [ -z ${COMMIT} ]; then
+  TASK=$(docker service ps --format "{{.ID}}" ${SERVICE} | head -1)
+else
+  TASK=$(docker service ps --format "{{.ID}}\t{{.Image}}" ${SERVICE} | grep ${COMMIT} | head -1 | awk '{ print $1 }')
+fi
+
+if [ -z ${TASK} ]; then
+  echo "Couldn't find task for service ${SERVICE}"
+  exit 1
+fi
+
+echo "Tailing task ${TASK} of service ${SERVICE}, with timeout of ${TIMEOUT} seconds..."
+LOOP=0
+IFS=''
+timeout ${TIMEOUT} docker service logs --no-task-ids ${TASK} --follow 2>&1 | while read line; do
+  echo "${line}";
+  if echo ${line} | grep -q "${STRING}"; then
+    FOUND=true
+    break
+  fi
+done
+
+if [ -z ${FOUND} ]; then
+  echo "Timed out after ${TIMEOUT} seconds."
+fi

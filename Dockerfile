@@ -19,6 +19,6 @@ COPY ssh-config /root/.ssh/config
 
 RUN chmod 600 /root/.ssh/config
 
-COPY entrypoint.sh wait-for-stack /usr/local/bin/
+COPY entrypoint.sh wait-for-stack tail-service-until /usr/local/bin/
 
 ENTRYPOINT ["entrypoint.sh"]
