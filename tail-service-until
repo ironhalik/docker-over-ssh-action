@@ -30,14 +30,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ -z ${TIMEOUT} ]; then
+if [ -z "${TIMEOUT}" ]; then
   TIMEOUT=60
 fi
 
-if [ -z ${SERVICE} ]; then
+if [ -z "${SERVICE}" ]; then
   echo "Missing argument: --service"
   exit 1
-elif [ -z ${STRING} ]; then
+elif [ -z "${STRING}" ]; then
   echo "Missing argument: --string"
   exit 1
 fi
@@ -59,11 +59,13 @@ IFS=''
 timeout ${TIMEOUT} docker service logs --no-task-ids ${TASK} --follow 2>&1 | while read line; do
   echo "${line}";
   if echo ${line} | grep -q "${STRING}"; then
-    FOUND=true
+    echo "String \"${STRING}\" found. Stopping service log tailing."
+    break
     break
   fi
 done
 
-if [ -z ${FOUND} ]; then
+if [ ${PIPESTATUS[0]} -eq 143 ]; then
   echo "Timed out after ${TIMEOUT} seconds."
+  exit 2
 fi
