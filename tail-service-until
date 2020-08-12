@@ -60,8 +60,7 @@ timeout ${TIMEOUT} docker service logs --no-task-ids ${TASK} --follow 2>&1 | whi
   echo "${line}";
   if echo ${line} | grep -q "${STRING}"; then
     echo "String \"${STRING}\" found. Stopping service log tailing."
-    break
-    break
+    exit 0
   fi
 done
 
