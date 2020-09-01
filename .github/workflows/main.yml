@@ -1,5 +1,13 @@
 name: docker-over-ssh
-on: [push]
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+
+env:
+  IMAGE_ID: ghcr.io/${{ github.repository_owner }}/docker-over-ssh-action
 
 jobs:
   test:
@@ -8,7 +16,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-
       - name: Run basic docker info
         uses: ./
         with:
@@ -17,7 +24,6 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             docker info
-
       - name: Test env vars
         uses: ./
         with:
@@ -28,3 +34,20 @@ jobs:
             echo ${FOO}
         env:
           FOO: bar
+  # build:
+  #   name: Build
+  #   needs: [test]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Build docker image
+  #       run: docker build . --tag ${IMAGE_ID}
+  #     - name: GHCR login
+  #       run: echo "${{ secrets.GHCR_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+  #     - name: Push image
+  #       run: |
+  #         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+  #         [ "$VERSION" == "master" ] && VERSION=latest
+  #         docker tag ${IMAGE_ID} ${IMAGE_ID}:${VERSION}
+  #         docker push ${IMAGE_ID}:${VERSION}
