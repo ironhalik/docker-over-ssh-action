@@ -1,20 +1,18 @@
-FROM alpine:3.11
+FROM alpine:3.24
 
 ENV PYTHONUNBUFFERED=1
 
-ENV DOCKER_DOWNLOAD_URL=https://download.docker.com/linux/static/stable/x86_64/docker-19.03.6.tgz
+ENV DOCKER_DOWNLOAD_URL=https://download.docker.com/linux/static/stable/x86_64/docker-29.9.0.tgz
 
 RUN apk add --no-cache \
     openssh-client \
     bash \
     curl \
-    python3 \
-    py3-pip&&\
+    aws-cli &&\
     curl -s -L ${DOCKER_DOWNLOAD_URL} | tar -xz -C /tmp/ &&\
     mv /tmp/docker/docker /usr/local/bin &&\
-    pip3 install --no-cache-dir awscli &&\
     rm -rf /tmp/* &&\
-    apk del --purge curl py3-pip &&\
+    apk del --purge curl &&\
     mkdir -p /root/.ssh
 
 COPY ssh-config /root/.ssh/config
