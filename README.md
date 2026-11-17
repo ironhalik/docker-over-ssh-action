@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: running docker info
-        uses: ironhalik/docker-over-ssh-action@v1
+        uses: ironhalik/docker-over-ssh-action@v8
         with:
           user: alice
           host: some-remote-host.tld
@@ -32,6 +32,7 @@ jobs:
     user: ${SSH_USER}
   ```
 - Keep in mind that the `script` commands are being executed locally, inside the container - not on the remote host. Only the docker API calls are being forwarded to the remote host.
+- v8 ships Docker CLI 29 and AWS CLI v2 (from Alpine, no Python/pip). Scripts relying on AWS CLI v1 commands (e.g. `aws ecr get-login`) need updating, or stay on v7.
 - There's a wait-for-stack script ([source](https://github.com/sudo-bmitch/docker-stack-wait)) for convenience
 
 ## Acknowledgements
