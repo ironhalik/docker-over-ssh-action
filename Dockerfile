@@ -2,14 +2,14 @@ FROM alpine:3.24
 
 ENV PYTHONUNBUFFERED=1
 
-ENV DOCKER_DOWNLOAD_URL=https://download.docker.com/linux/static/stable/x86_64/docker-29.9.0.tgz
+ENV DOCKER_VERSION=29.9.0
 
 RUN apk add --no-cache \
     openssh-client \
     bash \
     curl \
     aws-cli &&\
-    curl -s -L ${DOCKER_DOWNLOAD_URL} | tar -xz -C /tmp/ &&\
+    curl -fsSL https://download.docker.com/linux/static/stable/$(uname -m)/docker-${DOCKER_VERSION}.tgz | tar -xz -C /tmp/ &&\
     mv /tmp/docker/docker /usr/local/bin &&\
     rm -rf /tmp/* &&\
     apk del --purge curl &&\

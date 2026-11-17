@@ -5,6 +5,10 @@ on:
       - master
     tags:
       - v*
+  pull_request:
+
+permissions:
+  contents: read
 
 env:
   IMAGE_ID: ghcr.io/${{ github.repository_owner }}/docker-over-ssh-action
@@ -15,21 +19,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Start throwaway ssh docker host
+        id: sshd
+        run: |
+          ssh-keygen -t ed25519 -N '' -q -f "$RUNNER_TEMP/ci_key"
+          docker run -d --name sshd \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -e PUBKEY="$(cat "$RUNNER_TEMP/ci_key.pub")" \
+            docker:cli \
+            sh -c 'apk add --no-cache openssh-server &&
+              ssh-keygen -A &&
+              mkdir -p /root/.ssh &&
+              echo "$PUBKEY" > /root/.ssh/authorized_keys &&
+              ln -s /usr/local/bin/docker /usr/bin/docker &&
+              exec /usr/sbin/sshd -D -e'
+          IP=$(docker inspect -f '{{.NetworkSettings.Networks.bridge.IPAddress}}' sshd)
+          timeout 60 sh -c "until nc -z $IP 22; do sleep 1; done"
+          echo "host=$IP" >> "$GITHUB_OUTPUT"
+          {
+            echo "key<<EOF"
+            cat "$RUNNER_TEMP/ci_key"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - name: Run basic docker info
         uses: ./
         with:
-          user: ${{ secrets.SSH_USER }}
-          host: ${{ secrets.SSH_HOST }}
-          key: ${{ secrets.SSH_KEY }}
+          user: root
+          host: ${{ steps.sshd.outputs.host }}
+          key: ${{ steps.sshd.outputs.key }}
           script: |
             docker info
       - name: Test env vars
         uses: ./
         with:
-          user: ${{ secrets.SSH_USER }}
-          host: ${{ secrets.SSH_HOST }}
-          key: ${{ secrets.SSH_KEY }}
+          user: root
+          host: ${{ steps.sshd.outputs.host }}
+          key: ${{ steps.sshd.outputs.key }}
           script: |
             echo ${FOO}
         env:
@@ -40,7 +68,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout
-  #       uses: actions/checkout@v2
+  #       uses: actions/checkout@v7
   #     - name: Build docker image
   #       run: docker build . --tag ${IMAGE_ID}
   #     - name: GHCR login
